@@ -1,45 +1,26 @@
-# import json
-import urllib
-import fiona, shapely
 import pandas as pd
 import numpy as np
+import fiona
+import shapely
 import geopandas as gpd
 import os
 import json
-from sklearn.neighbors import KernelDensity
-from sklearn.model_selection import KFold, GridSearchCV
+import urllib
 
-
-def make_grid(bbox, resolution=0.5):
-    nlon = int(np.ceil((bbox['east']- bbox['west'])/(resolution/111.32)))
-    nlat = int(np.ceil((bbox['north']- bbox['south'])/(resolution/110.57)))
-    lon = np.linspace(float(bbox['west']), float(bbox['east']), nlon)
-    lat = np.linspace(float(bbox['south']), float(bbox['north']), nlat)
-    lonv, latv = np.meshgrid(lon,lat)
-    grid = np.vstack([lonv.ravel(), latv.ravel()]).T
-    grid = gpd.GeoDataFrame(grid, geometry=[shapely.geometry.Point(xy) for xy in grid],crs={'init': 'epsg:4326'})
-    grid.rename(columns={0:'lon',1:'lat'}, inplace=True)
-    return grid, lonv, latv
-
-def gridsearch_kde_params(points, n_samples=None):
-    if n_samples is None:
-        n_samples = points.shape[0]
-    pgrid = {'bandwidth': np.logspace(-1, -5, 10),
-             'kernel':['gaussian','linear','exponential','tophat'],
-             'metric':['haversine']}
-    gscv = GridSearchCV(KernelDensity(), pgrid,
-                        cv=5, n_jobs=-1, iid=False)
-    gscv.fit(points[['lon','lat']].sample(int(n_samples),random_state=0));
-    return gscv.best_params_
-
-def overpass_get_points_by_key(folder, bbox, key, item): #keys: 'amenity', 'building', 'highway', 'tourism', 'historic'
+def overpass_get_points_by_key(folder, bbox, key, item):
+    #keys examples: 'amenity', 'building', 'highway', 'tourism', 'historic'
     if "OSM_points_{}-{}".format(key, item) in os.listdir(folder):
         return gpd.read_file("{}/OSM_points_{}-{}".format(folder,key, item).replace('//','/'))
     else:
         print('Querying {} points from Overpass API...'.format(key+"-"+item))
         query_string = ''.join("node[\"{}\"=\"{}\"]{};way[\"{}\"=\"{}\"]{};relation[\"{}\"=\"{}\"]{};".format(key, item, bbox, key, item, bbox, key, item, bbox)).replace("=\"*\"",'')
         query_string = "[out:json][timeout:50];({});out+geom;".format(query_string)
-        result = json.loads(urllib.request.urlopen('http://overpass-api.de/api/interpreter?data='+query_string).read())
+        for i in range(5):
+            try:
+                result = json.loads(urllib.request.urlopen('http://overpass-api.de/api/interpreter?data='+query_string).read())
+            except:
+                continue
+            break
         points = []
         for x in result['elements']:
             elem = {}
@@ -60,13 +41,19 @@ def overpass_get_points_by_key(folder, bbox, key, item): #keys: 'amenity', 'buil
         return points
 
 def overpass_get_lines_by_key(folder, bbox, key, item, aspoints=False):
+    #keys examples: 'amenity', 'building', 'highway', 'tourism', 'historic'
     if "OSM_lines_{}-{}".format(key, item) in os.listdir(folder):
         return gpd.read_file("{}/OSM_lines_{}-{}".format(folder,key, item).replace('//','/'))
     else:
         print('Querying {} lines from Overpass API...'.format(key+"-"+item))
         query_string = ''.join("way[\"{}\"=\"{}\"]{};".format(key, item, bbox))
         query_string = "[out:json][timeout:50];({});out+geom;".format(query_string)
-        result = json.loads(urllib.request.urlopen('http://overpass-api.de/api/interpreter?data='+query_string).read())
+        for i in range(5):
+            try:
+                result = json.loads(urllib.request.urlopen('http://overpass-api.de/api/interpreter?data='+query_string).read())
+            except:
+                continue
+            break
         lines = []
         for x in result['elements']:
             elem = {}
@@ -98,6 +85,7 @@ class OSMHawk(object):
         else:
             self.bbox = bbox
         self.folder = folder
+
     def transform(self, points=None, lines=None):
         pdf = pd.DataFrame()
         if points is not None:
@@ -114,15 +102,3 @@ class OSMHawk(object):
         ldf['lat'] = ldf.geometry.y
         ldf['lon'] = ldf.geometry.x
         return pdf, ldf
-
-
-# # TESTS
-# bbox = {'west':-35.29122515, 'south':-5.91582226, 'east':-35.153019, 'north':-5.702727}
-# ol = OSMLeech(bbox, folder='/home/adelsondias/Repos/crime-hotspots/predspot/tests')
-# points = {
-#     'amenity':['hospital','school']
-# }
-# lines = {
-#     'highway':['primary','secondary']
-# }
-# ol.transform(points, lines)

@@ -1,1 +1,4 @@
-__*
+__pycache__*
+*.ipynb_checkpoints*
+*OSM_*
+*GF_*
