@@ -30,6 +30,28 @@ def gridsearch_kde_params(points, n_samples=None):
     gscv.fit(points[['lon','lat']].sample(int(n_samples),random_state=0));
     return gscv.best_params_
 
+def kde_mean_grid_column(grid, X, column):
+    Xn = grid.data.join(X).groupby(column).mean()[X.columns]
+    Xn.index.name='place'
+    return grid.data.join(Xd, on=column)[X.columns]
+
+def landmark_dens_grid_column(landmarks, grid, city_shape, column):
+    plgrid = gpd.sjoin(landmarks.pdf, city_shape, op='within')
+    llgrid = gpd.sjoin(landmarks.ldf, city_shape, op='within')
+
+    Xn = pd.DataFrame()
+    for item in plgrid['tag'].unique():
+        dens = plgrid.loc[plgrid['tag']==item].groupby('BAIRRO').size()/(10000*city_shape.set_index(column).area)
+        dens = dens.fillna(0)
+        Xn[item] = dens
+    for item in llgrid['tag'].unique():
+        dens = llgrid.loc[llgrid['tag']==item].groupby('BAIRRO').size()/(10000*city_shape.set_index(column).area)
+        dens = dens.fillna(0)
+        Xn[item] = dens
+    Xn = grid.join(Xn, on=column)[Xn.columns]
+    Xn.index.name = 'place'
+    return Xn
+
 
 class Grid(object):
 
