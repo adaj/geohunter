@@ -32,8 +32,9 @@ def gridsearch_kde_params(points, n_samples=None):
 
 def kde_mean_grid_column(grid, X, column):
     Xn = grid.data.join(X).groupby(column).mean()[X.columns]
+    Xn = grid.data.join(Xn, on=column)[X.columns]
     Xn.index.name='place'
-    return grid.data.join(Xd, on=column)[X.columns]
+    return Xn
 
 def landmark_dens_grid_column(landmarks, grid, city_shape, column):
     plgrid = gpd.sjoin(landmarks.pdf, city_shape, op='within')
