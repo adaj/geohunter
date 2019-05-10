@@ -22,11 +22,11 @@ def make_grid(bbox, resolution=0.5):
 def gridsearch_kde_params(points, n_samples=None):
     if n_samples is None:
         n_samples = points.shape[0]
-    pgrid = {'bandwidth': np.logspace(-1, -5, 50),
+    pgrid = {'bandwidth': np.linspace(0.01/110, 10/110, 50),
              'kernel':['gaussian','linear','exponential','tophat'],
              'metric':['haversine']}
     gscv = GridSearchCV(KernelDensity(), pgrid,
-                        cv=5, n_jobs=-1, iid=False)
+                        cv=10, n_jobs=-1, iid=False)
     gscv.fit(points[['lon','lat']].sample(int(n_samples),random_state=0));
     return gscv.best_params_
 
@@ -66,7 +66,7 @@ class Grid(object):
                                                             'south':city_shape.bounds.min().values[1],
                                                             'west':city_shape.bounds.min().values[0]},
                                                     resolution=self.resolution)
-        self.data = gpd.sjoin(self.data, self.city_shape, how='inner', op='within')
+        self.data = gpd.sjoin(self.data, self.city_shape, how='inner', op='intersects')
         self.data = self.data[~self.data.index.duplicated(keep='first')]
         return self
 
@@ -88,12 +88,14 @@ class SquareGrid(object):
                 G[c] = {'geometry':shapely.geometry.Polygon([[x0,y0],[x0+self.resolution,y0],[x0+self.resolution,y0+self.resolution],[x0,y0+self.resolution]])}
                 c += 1
                 y0 += self.resolution
-            y0 = bbox['south']
+            y0 = city_shape.bounds.min().values[1]
             x0 += self.resolution
         G = pd.DataFrame(G).transpose()
         G = gpd.GeoDataFrame(G, geometry='geometry', crs={'init':'epsg:4326'})
         G = gpd.sjoin(G, city_shape, op='intersects')
         self.data = G[~G.index.duplicated()]
+        self.data.loc[:,'lon'] = self.data['geometry'].centroid.x
+        self.data.loc[:,'lat'] = self.data['geometry'].centroid.y
         return self
 
 
