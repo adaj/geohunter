@@ -75,25 +75,21 @@ class SquareGrid(object):
     def __init__(self, resolution):
         self.resolution = resolution/110
     def fit(self, city_shape):
-        bbox={'north':city_shape.bounds.max().values[3],
-            'east':city_shape.bounds.max().values[2],
-            'south':city_shape.bounds.min().values[1],
-            'west':city_shape.bounds.min().values[0]}
-        x0 = bbox['west']
-        xf = bbox['east']
-        y0 = bbox['south']
-        yf = bbox['north']
-        n_y = int((yf-y0)/res)
-        n_x = int((xf-x0)/res)
+        x0 = city_shape.bounds.min().values[0]
+        xf = city_shape.bounds.max().values[2]
+        y0 = city_shape.bounds.min().values[1]
+        yf = city_shape.bounds.max().values[3]
+        n_y = int((yf-y0)/self.resolution)
+        n_x = int((xf-x0)/self.resolution)
         G = {}
         c = 0
         for i in range(n_x):
             for j in range(n_y):
-                G[c] = {'geometry':shapely.geometry.Polygon([[x0,y0],[x0+res,y0],[x0+res,y0+res],[x0,y0+res]])}
+                G[c] = {'geometry':shapely.geometry.Polygon([[x0,y0],[x0+self.resolution,y0],[x0+self.resolution,y0+self.resolution],[x0,y0+self.resolution]])}
                 c += 1
-                y0 += res
+                y0 += self.resolution
             y0 = bbox['south']
-            x0 += res
+            x0 += self.resolution
         G = pd.DataFrame(G).transpose()
         G = gpd.GeoDataFrame(G, geometry='geometry', crs={'init':'epsg:4326'})
         G = gpd.sjoin(G, city_shape, op='intersects')
