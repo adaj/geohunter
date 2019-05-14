@@ -2,7 +2,7 @@ import numpy as np
 import pysal
 
 def q_ongrid(data, grid, strata_col):
-#   usage: q_ongrid(sgrid.data, strata_col='BAIRRO', value_col='value')
+#   usage: q_ongrid(grid.data['value'], grid.data, 'BAIRRO')
     qi = 0
     for strata in grid[strata_col].unique():
         x = grid.loc[grid[strata_col]==strata]

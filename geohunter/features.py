@@ -5,6 +5,7 @@ import os
 import geopandas as gpd
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import KFold, GridSearchCV
+import joblib
 
 import geohunter.osm
 
@@ -22,8 +23,8 @@ def make_grid(bbox, resolution=0.5):
 def gridsearch_kde_params(points, n_samples=None):
     if n_samples is None:
         n_samples = points.shape[0]
-    pgrid = {'bandwidth': np.linspace(0.01/110, 10/110, 50),
-             'kernel':['gaussian','linear','exponential','tophat'],
+    pgrid = {'bandwidth': np.linspace(0.01/110, 1/110, 50),
+             'kernel':['gaussian','linear','exponential','tophat','epanechnikov'],
              'metric':['haversine']}
     gscv = GridSearchCV(KernelDensity(), pgrid,
                         cv=10, n_jobs=-1, iid=False)
@@ -165,7 +166,9 @@ class KDEFeatures(object):
                 self.kde_params[ltype] = kde.params
                 X = X.join(kde.transform(l, label='kde:'+ltype), on='place')
             X.to_csv(self.landmarks.osm_folder+'/GF_{}.csv'.format(label))
-        return X
+            joblib.dump(self.kde_params, self.landmarks.osm_folder+'/kde_params_{}.joblib'.format(label))
+        return X, self.kde_params
+    
 
 def plot_kde(shape, grid, kde, ax, fig_path=False, geojson_path=False):
     import numpy as np
