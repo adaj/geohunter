@@ -31,6 +31,10 @@ def overpass_get_points_by_key(folder, bbox, key, item):
             elem['geometry'] = shapely.geometry.Point([lon,lat])
             elem['id'] = x['id']
             elem['tag'] = key+'_'+x['tags'][key]
+            if 'name' in x['tags'].keys():
+                elem['name'] = x['tags']['name']
+            else:
+                elem['name'] = np.nan
             points.append(elem)
         points = gpd.GeoDataFrame(points,crs={'init': 'epsg:4326'}).to_crs(fiona.crs.from_epsg(4326))
         points.set_index('id', inplace=True)
@@ -61,6 +65,10 @@ def overpass_get_lines_by_key(folder, bbox, key, item, aspoints=False):
                 elem['geometry'] = shapely.geometry.LineString([(i['lon'],i['lat']) for i in x['geometry']])
                 elem['id'] = x['id']
                 elem['tag'] = "{}_{}".format(key,x['tags'][key])
+                if 'name' in x['tags'].keys():
+                    elem['name'] = x['tags']['name']
+                else:
+                    elem['name'] = np.nan
             except:
                 continue
             lines.append(elem)
@@ -92,13 +100,13 @@ class OSMHawk(object):
             for key in points:
                 for item in points[key]:
                     pdf = pdf.append(overpass_get_points_by_key(self.folder, self.bbox, key, item))
-        pdf['lat'] = pdf.geometry.y
-        pdf['lon'] = pdf.geometry.x
+            pdf['lat'] = pdf.geometry.y
+            pdf['lon'] = pdf.geometry.x
         ldf = pd.DataFrame()
         if lines is not None:
             for key in lines:
                 for item in lines[key]:
                     ldf = ldf.append(overpass_get_lines_by_key(self.folder, self.bbox, key, item, aspoints=True))
-        ldf['lat'] = ldf.geometry.y
-        ldf['lon'] = ldf.geometry.x
+            ldf['lat'] = ldf.geometry.y
+            ldf['lon'] = ldf.geometry.x
         return pdf, ldf
