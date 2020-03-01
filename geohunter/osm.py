@@ -6,6 +6,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
+import geohunter.util
+
 MAP_FEATURES_KEYS = ['aerialway', 'aeroway', 'amenity', 'barrier', 'boundary',
     'admin_level', 'building', 'craft', 'emergency', 'geological', 'highway',
     'sidewalk', 'cycleway', 'busway', 'bicycle_road', 'service', 'historic',
@@ -67,6 +69,10 @@ class API:
                 result_gdf['mf_key'] = mf_key
                 poi_data = poi_data.append(result_gdf)
         poi_data['mf_item'] = poi_data.apply(lambda x: x['tags'][x['mf_key']], axis=1)
+        poi_data = poi_data.reset_index(drop=True)
+        if isinstance(bbox, gpd.GeoDataFrame):
+            poi_ix = gpd.sjoin(poi_data, bbox, op='intersects').index.unique()
+            poi_data = poi_data.loc[poi_ix]
         return poi_data
 
     @classmethod
@@ -96,7 +102,7 @@ class API:
         dict
             Data requested in output format of Overpass API.
         """
-        bbox = parse_bbox(bbox)
+        bbox = geohunter.util.parse_bbox(bbox)
         query_string = ''
         for i in ['node','way','relation']:
             if map_feature_item=='*':
@@ -137,28 +143,6 @@ def overpass_result_to_geodf(result):
     elements_df['geometry'] = elements_df.apply(parse_geometry, axis=1)
     elements_df = gpd.GeoDataFrame(elements_df, crs={'init': 'epsg:4326'})
     return elements_df[['type','id','tags','geometry']]
-
-
-def parse_bbox(bbox):
-    """
-    Organizes the bbox string required into the Overpass request.
-    """
-    if isinstance(bbox, gpd.GeoDataFrame):
-        bounds = bbox.bounds
-        bbox={'north':bounds.max().values[3],'east':bounds.max().values[2],
-            'south':bounds.min().values[1],'west':bounds.min().values[0]}
-        bbox = f"({bbox['south']},{bbox['west']},{bbox['north']},{bbox['east']})"
-    elif isinstance(bbox, str):
-        bbox_ = bbox[1:-1].split(',')
-        bbox_ = [float(b) for b in bbox_]
-        assert bbox_[0]<bbox_[2] and bbox_[1]<bbox_[3], \
-            "Invalid bbox. Please follow this structure: '(S,W,N,E)'"
-        bbox = bbox.replace(' ','')
-    elif isinstance(bbox, dict):
-        assert bbox['south']<bbox['north'] and bbox['west']>bbox['east'], \
-            "Invalid bbox. Please include 'south','north','west' and 'east' keys"
-        bbox = f"({bbox['south']},{bbox['west']},{bbox['north']},{bbox['east']})"
-    return bbox
 
 
 def parse_geometry(x):
