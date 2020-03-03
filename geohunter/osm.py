@@ -1,41 +1,68 @@
-import pandas as pd
-import geopandas as gpd
+"""
+geohunter.osm
+
+This module implements Overpass requests with a simpler interface. The
+OpenStreetMap has a data model based on nodes, ways and relations. The
+geometric data structures available in geopandas are points, lines and polygons
+(but also multipoints, multilines and multipolygons), which are shapely
+objects under the hood. The latter set of data structures may be more easy to
+work for some people, for example to do spatial joins. In this module,
+we parse Overpass results to geopandas GeoDataFrame.
+
+For a complete list of data categories available ("map features"), please
+look the OpenStreetMap.
+
+Contributors: Adelson Araujo jr
+"""
+
+from pandas import DataFrame
+from geopandas import GeoDataFrame, sjoin
 from shapely.ops import polygonize, linemerge
-from shapely.geometry import Point, Polygon, LineString, MultiPolygon
-import requests
+from shapely.geometry import Point, Polygon, LineString
+from shapely.geometry import MultiPolygon, MultiPoint
+from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 import geohunter.util
 
 MAP_FEATURES_KEYS = ['aerialway', 'aeroway', 'amenity', 'barrier', 'boundary',
-    'admin_level', 'building', 'craft', 'emergency', 'geological', 'highway',
-    'sidewalk', 'cycleway', 'busway', 'bicycle_road', 'service', 'historic',
-    'landuse', 'leisure', 'man_made', 'military', 'natural', 'office', 'place',
-    'power', 'public_transport', 'railway', 'route', 'shop', 'sport', 'telecom',
-    'tourism', 'waterway', 'water', 'name']
+                     'admin_level', 'building', 'craft', 'emergency',
+                     'geological', 'highway', 'sidewalk', 'cycleway', 'busway',
+                     'bicycle_road', 'service', 'historic', 'landuse',
+                     'leisure', 'man_made', 'military', 'natural', 'office',
+                     'place', 'power', 'public_transport', 'railway', 'route',
+                     'shop', 'sport', 'telecom', 'tourism', 'waterway',
+                     'water', 'name']
 
 
 class API:
+    """
+    `API` is a facade for requesting data according to the OpenStreetMap
+    data model with the `request_overpass()` method, but this class also
+    implements a `get()` method which return the data required in a single
+    pandas DataFrame that has a geometric attribute that makes it a geopandas
+    GeoDataFrame (please consult geopandas documentation for more details).
+    """
 
     @classmethod
-    def get(self, bbox, **map_features):
+    def get(cls, bbox, **map_features):
         """
         Returns points-of-interest data from OpenStreetMap.
 
-        It returns the gpd.GeoDataFrame with a set of points-of-interest
+        It returns the geopandas.GeoDataFrame with a set of points-of-interest
         requested in **map_features. For a list of complete map features keys
         and elements available on the API, please consult documentation
         https://wiki.openstreetmap.org/wiki/Map_Features.
 
         Example : df = API.get_poi(bbox='(-5.91,-35.29,-5.70,-35.15)',
-                    amenity=['hospital','police'], natural='*')
+                    amenity=['hospital' , 'police'], natural='*')
 
         Parameters
         ----------
-        bbox : str or gpd.GeoDataFrame
+        bbox : str or geopandas.GeoDataFrame
         If str, follow the structure (south_lat,west_lon,north_lat,east_lon),
-        but if you prefer to pass a gpd.GeoDataFrame, the bbox will be
+        but if you prefer to pass a geopandas.GeoDataFrame, the bbox will be
         defined as the maximum and minimum values delimited by the geometry.
 
         **map_features : poi requested described in map features
@@ -44,14 +71,14 @@ class API:
 
         Returns
         -------
-        gpd.GeoDataFrame
+        geopandas.GeoDataFrame
             GeoDataFrame with all points-of-interest requested.
         """
-        for mf in map_features:
-            if mf not in MAP_FEATURES_KEYS:
-                raise Exception(f"{mf} is not a valid map feature. Please " \
+        for map_feature in map_features:
+            if map_feature not in MAP_FEATURES_KEYS:
+                raise Exception(f"{map_feature} is not a valid map feature. Please " \
                     + "consult https://wiki.openstreetmap.org/wiki/Map_Features.")
-        poi_data = pd.DataFrame()
+        poi_data = DataFrame()
         for mf_key in map_features:
             if isinstance(map_features[mf_key], list):
                 pass
@@ -63,20 +90,21 @@ class API:
                 raise Exception(f'Map feature {mf_key}={map_features[mf_key]}. ' \
                     + 'Please consult https://wiki.openstreetmap.org/wiki/Map_Features.')
             for mf_item in map_features[mf_key]:
-                result = self.request_overpass(bbox=bbox,
-                    map_feature_key=mf_key, map_feature_item=mf_item)
+                result = cls.request_overpass(bbox=bbox,
+                                              map_feature_key=mf_key,
+                                              map_feature_item=mf_item)
                 result_gdf = overpass_result_to_geodf(result)
                 result_gdf['mf_key'] = mf_key
                 poi_data = poi_data.append(result_gdf)
         poi_data['mf_item'] = poi_data.apply(lambda x: x['tags'][x['mf_key']], axis=1)
         poi_data = poi_data.reset_index(drop=True)
-        if isinstance(bbox, gpd.GeoDataFrame):
-            poi_ix = gpd.sjoin(poi_data, bbox, op='intersects').index.unique()
+        if isinstance(bbox, GeoDataFrame):
+            poi_ix = sjoin(poi_data, bbox, op='intersects').index.unique()
             poi_data = poi_data.loc[poi_ix]
         return poi_data
 
     @classmethod
-    def request_overpass(self, bbox, map_feature_key, map_feature_item):
+    def request_overpass(cls, bbox, map_feature_key, map_feature_item):
         """
         Return the json resulted from *a single* request on Overpass API.
 
@@ -88,9 +116,9 @@ class API:
 
         Parameters
         ----------
-        bbox : str or gpd.GeoDataFrame
+        bbox : str or geopandas.GeoDataFrame
         If str, follow the structure (south_lat,west_lon,north_lat,east_lon),
-        but if you prefer to pass a gpd.GeoDataFrame, the bbox will be
+        but if you prefer to pass a geopandas.GeoDataFrame, the bbox will be
         defined as the maximum and minimum values delimited by the geometry.
 
         map_feature_key: str
@@ -104,8 +132,8 @@ class API:
         """
         bbox = geohunter.util.parse_bbox(bbox)
         query_string = ''
-        for i in ['node','way','relation']:
-            if map_feature_item=='*':
+        for i in ['node', 'way', 'relation']:
+            if map_feature_item == '*':
                 query_string += f'{i}["{map_feature_key}"]{bbox};'
             else:
                 query_string += f'{i}["{map_feature_key}"="{map_feature_item}"]{bbox};'
@@ -115,51 +143,52 @@ class API:
         if result.status_code != 200:
             raise Exception("Bad request.")
         result = result.json()
-        if len(result['elements'])==0:
+        if len(result['elements']) == 0:
             print(query_string)
-            raise Exception('Request made with no data returned,' \
+            raise Exception('Request made with no data returned , ' \
                 + 'please check try with other parameters.')
-        else:
-            return result
+        return result
 
 
-def requests_retry_session(retries=3, backoff_factor=0.5,
-    status_forcelist=(500, 503, 502, 504), session=None):
-    # retrieved from https://www.peterbe.com/plog/best-practice-with-retries-with-requests
-        session = session or requests.Session()
-        retry = Retry(total=retries, read=retries, connect=retries,
-            backoff_factor=backoff_factor, status_forcelist=status_forcelist)
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
-        return session
+def requests_retry_session(retries=3, backoff_factor=0.5, session=None,
+                           status_forcelist=(500, 503, 502, 504)):
+    """
+    Retrieved from https://www.peterbe.com/plog/best-practice-with-retries-with-requests.
+    """
+    session = session or Session()
+    retry = Retry(total=retries, read=retries, connect=retries,
+                  backoff_factor=backoff_factor, status_forcelist=status_forcelist)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
 
 
 def overpass_result_to_geodf(result):
     """
     Transforms the result from Overpass request to GeoDataFrame.
     """
-    elements_df = pd.DataFrame(result['elements'])
+    elements_df = DataFrame(result['elements'])
     elements_df['geometry'] = elements_df.apply(parse_geometry, axis=1)
-    elements_df = gpd.GeoDataFrame(elements_df, crs={'init': 'epsg:4326'})
-    return elements_df[['type','id','tags','geometry']]
+    elements_df = GeoDataFrame(elements_df, crs={'init': 'epsg:4326'})
+    return elements_df[['type', 'id', 'tags', 'geometry']]
 
 
-def parse_geometry(x):
+def parse_geometry(x_elements_df):
     """
     Transforms coordinates into shapely objects.
     """
-    if x['type']=='node':
-        g = Point([x['lon'],x['lat']])
-    elif x['type']=='way':
-        line = [(i['lon'],i['lat']) for i in x['geometry']]
-        if line[0]==line[-1]:
-            g = Polygon(line)
+    if x_elements_df['type'] == 'node':
+        geom = Point([x_elements_df['lon'], x_elements_df['lat']])
+    elif x_elements_df['type'] == 'way':
+        line = [(i['lon'], i['lat']) for i in x_elements_df['geometry']]
+        if line[0] == line[-1]:
+            geom = Polygon(line)
         else:
-            g = LineString(line)
+            geom = LineString(line)
     else: # relation
-        g = parse_relation(x['members'])
-    return g
+        geom = parse_relation(x_elements_df['members'])
+    return geom
 
 
 def parse_relation(x_members):
@@ -169,15 +198,19 @@ def parse_relation(x_members):
     if not isinstance(x_members, list):
         return x_members
     shell, holes, lines, points = [], [], [], []
-    for x in x_members:
-        line = [(p['lon'],p['lat']) for p in x.get("geometry", [])]
+    # Iterating through all geometries inside an element of the
+    # Overpass relation ouput, which often are composed by
+    # many internal geometries. For example, some polygons are formed with
+    # sets of lines, sometimes unordered.
+    for x_m in x_members:
+        line = [(p['lon'], p['lat']) for p in x_m.get("geometry", [])]
         if not line: # empty geometry or it's a node
-            if x.get('type', None)=='node':
-                points.append((x['lon'],x['lat']))
-        elif line[0]==line[-1]: # explicit polygons
-            if x['role']=='outer':
+            if x_m.get('type', None) == 'node':
+                points.append((x_m['lon'], x_m['lat']))
+        elif line[0] == line[-1]: # explicit polygons
+            if x_m['role'] == 'outer':
                 shell.append(line)
-            elif x['role']=='inner':
+            elif x_m['role'] == 'inner':
                 holes.append(line)
         else: # these may be lines or a polygon formed by lines
             lines.append(LineString(line))
@@ -188,27 +221,31 @@ def parse_relation(x_members):
     # by a node/point, then it's returned.
     if shell and lines:
         polygons = shell + list(polygonize(lines))
-        return MultiPolygon([[s,[]] for s in polygons])
+        final_geom = MultiPolygon([[s, []] for s in polygons])
     elif shell:
-        if len(shell)>1:
+        if len(shell) > 1:
             # Here we don't treat multipolygons with multiholes.
             # Who want this, please implement for us :D
-            return MultiPolygon([[s,[]] for s in shell])
-        else: # single shell
-            return Polygon(shell[0], holes)
+            final_geom = MultiPolygon([[s, []] for s in shell])
+        else:
+            final_geom = Polygon(shell[0], holes)
     elif lines:
-        if len(lines)<3:
+        if len(lines) < 3:
             # Two lines or less doesn't form a polygon. If
             # there are two lines, these are merged.
-            return linemerge(lines)
+            final_geom = linemerge(lines)
         else:
             # Lines may not be sequentially organized,
             # so one cannot simply Polygon(lines). Luckily,
             # shapely saved us with shapely.ops.polygonize.
             polygon = list(polygonize(lines))
-            if len(polygon)>1:
-                return MultiPolygon([[s,[]] for s in polygon])
+            if len(polygon) > 1:
+                final_geom = MultiPolygon([[s, []] for s in polygon])
             else:
-                return polygon[0]
+                final_geom = polygon[0]
     elif points:
-        return
+        if len(points) > 1:
+            final_geom = MultiPoint(points)
+        else:
+            final_geom = Point(points[0])
+    return final_geom

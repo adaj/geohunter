@@ -17,7 +17,7 @@ Clone the package, go to the repository directory (where setup.py is) and `pip i
 
 ## Usage
 
-Take a look at the /example folder.
+Please take a look at the /example folder while the documentation is under construction.
 
 ## Requirements
 
