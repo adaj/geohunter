@@ -2,22 +2,25 @@
 geohunter.util
 
 This module implements several operations for analyzing OpenStreetMap data.
-Under constant changes...
 
 Contributors : Adelson Araujo jr
 """
 
+import math
 import pandas as pd
 import geopandas as gpd
 import numpy as np
-from numpy import linspace, ceil, meshgrid, vstack
-from shapely.geometry import Point
+from numpy import linspace, ceil, meshgrid, vstack, zeros
+from shapely.geometry import Point, Polygon
 from scipy import stats
+import matplotlib.pyplot as plt
+import geojsoncontour
+
 
 pd.options.mode.chained_assignment = None
 
 
-def kde_interpolation(poi, area=None, resolution=1, grid=None):
+def kde_interpolation(poi, area=None, resolution=1, grid=None, return_contour_geojson=False):
     """
     Applies kernel density estimation to a set points-of-interest
     measuring the density estimation on a grid of places (arbitrary points
@@ -46,13 +49,31 @@ def kde_interpolation(poi, area=None, resolution=1, grid=None):
     if grid is None and area is None:
         raise ValueError('grid or area must be given.')
     if grid is None and isinstance(area, gpd.GeoDataFrame):
-        grid = make_gridpoints(area, resolution)
+        grid, lonv, latv = make_gridpoints(area, resolution, return_coords=True)
     assert isinstance(poi, gpd.GeoDataFrame)
     kernel = stats.gaussian_kde(np.vstack([poi.centroid.x, poi.centroid.y]),
-                                bw_method='scott')
+                                bw_method=1/110)#'scott')
     grid_ = grid[:]
     grid_['density'] = kernel(grid[['lon', 'lat']].values.T)
-    return grid_
+    if return_contour_geojson:
+        return contour_geojson(grid_['density'], lonv, latv,
+                               cmin=grid_['density'].min(),
+                               cmax=grid_['density'].max())
+    else:
+        return grid_
+
+
+def contour_geojson(y, lonv, latv, cmin, cmax):
+    Z = zeros(lonv.shape[0]*lonv.shape[1]) - 999
+    Z[y.index] = y.values
+    Z = Z.reshape(lonv.shape)
+    fig, axes = plt.subplots()
+    contourf = axes.contourf(lonv, latv, Z,
+                            levels=linspace(cmin, cmax, 25),
+                            cmap='Spectral_r')
+    geojson = geojsoncontour.contourf_to_geojson(contourf=contourf, fill_opacity=0.5)
+    plt.close(fig)
+    return geojson
 
 
 def make_gridpoints(bbox, resolution=1, return_coords=False):

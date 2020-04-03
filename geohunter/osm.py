@@ -33,7 +33,7 @@ MAP_FEATURES_KEYS = ['aerialway', 'aeroway', 'amenity', 'barrier', 'boundary',
                      'leisure', 'man_made', 'military', 'natural', 'office',
                      'place', 'power', 'public_transport', 'railway', 'route',
                      'shop', 'sport', 'telecom', 'tourism', 'waterway',
-                     'water', 'name']
+                     'water', 'name', 'healthcare']
 
 
 class API:
@@ -46,7 +46,7 @@ class API:
     """
 
     @classmethod
-    def get(cls, bbox, **map_features):
+    def get(cls, bbox, as_points=False, **map_features):
         """
         Returns points-of-interest data from OpenStreetMap.
 
@@ -93,7 +93,7 @@ class API:
                 result = cls.request_overpass(bbox=bbox,
                                               map_feature_key=mf_key,
                                               map_feature_item=mf_item)
-                result_gdf = overpass_result_to_geodf(result)
+                result_gdf = overpass_result_to_geodf(result, as_points)
                 result_gdf['mf_key'] = mf_key
                 poi_data = poi_data.append(result_gdf)
         poi_data['mf_item'] = poi_data.apply(lambda x: x['tags'][x['mf_key']], axis=1)
@@ -164,13 +164,15 @@ def requests_retry_session(retries=3, backoff_factor=0.5, session=None,
     return session
 
 
-def overpass_result_to_geodf(result):
+def overpass_result_to_geodf(result, as_points=False):
     """
     Transforms the result from Overpass request to GeoDataFrame.
     """
     elements_df = DataFrame(result['elements'])
     elements_df['geometry'] = elements_df.apply(parse_geometry, axis=1)
     elements_df = GeoDataFrame(elements_df, crs={'init': 'epsg:4326'})
+    if as_points:
+        elements_df['geometry'] = elements_df['geometry'].centroid
     return elements_df[['type', 'id', 'tags', 'geometry']]
 
 
