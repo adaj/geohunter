@@ -10,8 +10,9 @@ setup(
     license='MIT',
     packages=['geohunter'],
     python_requires='>=3.7',
-    install_requires=['pandas', 'matplotlib'
-        'geopandas==0.7.0', 'descartes', 'requests'],
+    install_requires=['pandas', 'matplotlib',  'scipy',
+        'geopandas==0.7.0', 'descartes', 'requests',
+        'geojsoncontour'],
     classifiers=[
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License'

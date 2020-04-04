@@ -20,7 +20,7 @@ import geojsoncontour
 pd.options.mode.chained_assignment = None
 
 
-def kde_interpolation(poi, area=None, resolution=1, grid=None, return_contour_geojson=False):
+def kde_interpolation(poi, bw='scott', area=None, resolution=1, grid=None, return_contour_geojson=False):
     """
     Applies kernel density estimation to a set points-of-interest
     measuring the density estimation on a grid of places (arbitrary points
@@ -52,7 +52,7 @@ def kde_interpolation(poi, area=None, resolution=1, grid=None, return_contour_ge
         grid, lonv, latv = make_gridpoints(area, resolution, return_coords=True)
     assert isinstance(poi, gpd.GeoDataFrame)
     kernel = stats.gaussian_kde(np.vstack([poi.centroid.x, poi.centroid.y]),
-                                bw_method=1/110)#'scott')
+                                bw_method=bw)
     grid_ = grid[:]
     grid_['density'] = kernel(grid[['lon', 'lat']].values.T)
     if return_contour_geojson:

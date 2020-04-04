@@ -15,6 +15,7 @@ look the OpenStreetMap.
 Contributors: Adelson Araujo jr
 """
 
+from time import time
 from pandas import DataFrame
 from geopandas import GeoDataFrame, sjoin
 from shapely.ops import polygonize, linemerge
@@ -36,17 +37,35 @@ MAP_FEATURES_KEYS = ['aerialway', 'aeroway', 'amenity', 'barrier', 'boundary',
                      'water', 'name', 'healthcare']
 
 
-class API:
+def timelog(func):
+    def wrapper(data_func, *args, **kwargs):
+        t0 = time()
+        result = func(data_func, *args, **kwargs)
+        tf = time()
+        print(f"Geohunter: [TIMELOG] {func.__name__} -- {kwargs} -- Completed in {round(tf - t0, 4)}s")
+        return result
+    return wrapper
+
+
+class Eagle:
     """
-    `API` is a facade for requesting data according to the OpenStreetMap
+    `Eagle` is a facade for requesting data according to the OpenStreetMap
     data model with the `request_overpass()` method, but this class also
     implements a `get()` method which return the data required in a single
     pandas DataFrame that has a geometric attribute that makes it a geopandas
     GeoDataFrame (please consult geopandas documentation for more details).
     """
 
-    @classmethod
-    def get(cls, bbox, as_points=False, **map_features):
+    def __init__(self):
+        self.session = requests_retry_session()
+
+    def __enter__(self):
+        return self
+
+    @timelog
+    def get(self, bbox, as_points=False,
+            largest_geom=False, sjoin_op='intersects',
+            **map_features):
         """
         Returns points-of-interest data from OpenStreetMap.
 
@@ -55,7 +74,7 @@ class API:
         and elements available on the API, please consult documentation
         https://wiki.openstreetmap.org/wiki/Map_Features.
 
-        Example : df = API.get_poi(bbox='(-5.91,-35.29,-5.70,-35.15)',
+        Example : df = Eagle().get(bbox='(-5.91,-35.29,-5.70,-35.15)',
                     amenity=['hospital' , 'police'], natural='*')
 
         Parameters
@@ -89,8 +108,16 @@ class API:
             else:
                 raise Exception(f'Map feature {mf_key}={map_features[mf_key]}. ' \
                     + 'Please consult https://wiki.openstreetmap.org/wiki/Map_Features.')
+            if mf_key == 'admin_level' and sjoin_op == 'intersects':
+                if not isinstance(bbox, GeoDataFrame):
+                    raise ValueError("To get admin_level geometries, it's " \
+                        + 'required to have bbox as a GeoDataframe.')
+                else:
+                    # forcing 'within' to get admin_level inside a geometry,
+                    #  intersection could get undesired neighbor regions
+                    sjoin_op = 'within'
             for mf_item in map_features[mf_key]:
-                result = cls.request_overpass(bbox=bbox,
+                result = self.request_overpass(bbox,
                                               map_feature_key=mf_key,
                                               map_feature_item=mf_item)
                 result_gdf = overpass_result_to_geodf(result, as_points)
@@ -99,12 +126,13 @@ class API:
         poi_data['mf_item'] = poi_data.apply(lambda x: x['tags'][x['mf_key']], axis=1)
         poi_data = poi_data.reset_index(drop=True)
         if isinstance(bbox, GeoDataFrame):
-            poi_ix = sjoin(poi_data, bbox, op='intersects').index.unique()
+            poi_ix = sjoin(poi_data, bbox, op=sjoin_op).index.unique()
             poi_data = poi_data.loc[poi_ix]
+        if largest_geom:
+            return poi_data.iloc[[poi_data['geometry'].area.argmax()]]
         return poi_data
 
-    @classmethod
-    def request_overpass(cls, bbox, map_feature_key, map_feature_item):
+    def request_overpass(self, bbox, map_feature_key, map_feature_item):
         """
         Return the json resulted from *a single* request on Overpass API.
 
@@ -138,7 +166,7 @@ class API:
             else:
                 query_string += f'{i}["{map_feature_key}"="{map_feature_item}"]{bbox};'
         query_string = f'[out:json];({query_string});out+geom;'
-        result = requests_retry_session().get(\
+        result = self.session.get(
             f'http://overpass-api.de/api/interpreter?data={query_string}')
         if result.status_code != 200:
             raise Exception("Bad request.")
@@ -148,6 +176,15 @@ class API:
             raise Exception('Request made with no data returned , ' \
                 + 'please check try with other parameters.')
         return result
+
+    def close(self):
+        self.session.close()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
+
+
 
 
 def requests_retry_session(retries=3, backoff_factor=0.5, session=None,
