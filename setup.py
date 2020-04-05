@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='geohunter',
-    version='0.1.2',
+    version='0.1.3',
     description="Package for parsing and analyzing OpenStreetMap data",
     url='https://github.com/adaj/geohunter',
     author="Adelson Araujo",

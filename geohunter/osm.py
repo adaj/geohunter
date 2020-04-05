@@ -16,7 +16,7 @@ Contributors: Adelson Araujo jr
 """
 
 from time import time
-from pandas import DataFrame
+from pandas import DataFrame, json_normalize
 from geopandas import GeoDataFrame, sjoin
 from shapely.ops import polygonize, linemerge
 from shapely.geometry import Point, Polygon, LineString
@@ -121,10 +121,11 @@ class Eagle:
                                               map_feature_key=mf_key,
                                               map_feature_item=mf_item)
                 result_gdf = overpass_result_to_geodf(result, as_points)
-                result_gdf['mf_key'] = mf_key
+                result_gdf['key'] = mf_key
                 poi_data = poi_data.append(result_gdf)
-        poi_data['mf_item'] = poi_data.apply(lambda x: x['tags'][x['mf_key']], axis=1)
+        poi_data['item'] = poi_data.apply(lambda x: x['tags'][x['key']], axis=1)
         poi_data = poi_data.reset_index(drop=True)
+        poi_data['name'] = json_normalize(poi_data['tags'])['name']
         if isinstance(bbox, GeoDataFrame):
             poi_ix = sjoin(poi_data, bbox, op=sjoin_op).index.unique()
             poi_data = poi_data.loc[poi_ix]
