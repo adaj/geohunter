@@ -16,6 +16,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__name__), '..'))
 
 
+master_doc = 'index'
 # -- Project information -----------------------------------------------------
 
 project = 'Geohunter'
@@ -41,7 +42,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
 
 autodoc_mock_imports = ["pandas","geopandas","shapely","numpy",
     "scipy", "matplotlib", "geojsoncontour"]
