@@ -1,6 +1,13 @@
 {
  "cells": [
   {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Example"
+   ]
+  },
+  {
    "cell_type": "code",
    "execution_count": 1,
    "metadata": {},
@@ -20,26 +27,27 @@
    "source": [
     "import geohunter as gh\n",
     "\n",
-    "with gh.osm.Eagle() as api:\n",
+    "api = gh.osm.Eagle()\n",
     "    \n",
-    "    state = api.get('(-8.02, -41.01, -3.0, -33.0)',\n",
-    "                 largest_geom=True,\n",
-    "                 name='Rio Grande do Norte')\n",
     "    \n",
-    "    city = api.get('(-8.02, -41.01, -3.0, -33.0)',\n",
-    "                 largest_geom=True,\n",
-    "                 name='Natal')\n",
-    "    \n",
-    "    poi = api.get(city,\n",
-    "                amenity=['school', 'hospital'],\n",
-    "                highway='primary',\n",
-    "                natural='*')\n",
-    "    \n",
-    "    all_cities = api.get(state, sjoin_op='within',\n",
-    "                        admin_level='8')\n",
-    "    \n",
-    "    biggest_city = api.get(state, sjoin_op='within', largest_geom=True,\n",
-    "                        admin_level='8')"
+    "state = api.get('(-8.02, -41.01, -3.0, -33.0)',\n",
+    "             largest_geom=True,\n",
+    "             name='Rio Grande do Norte')\n",
+    "\n",
+    "city = api.get('(-8.02, -41.01, -3.0, -33.0)',\n",
+    "             largest_geom=True,\n",
+    "             name='Natal')\n",
+    "\n",
+    "poi = api.get(city,\n",
+    "            amenity=['school', 'hospital'],\n",
+    "            highway='primary',\n",
+    "            natural='*')\n",
+    "\n",
+    "all_cities = api.get(state, sjoin_op='within',\n",
+    "                    admin_level='8')\n",
+    "\n",
+    "biggest_city = api.get(state, sjoin_op='within', largest_geom=True,\n",
+    "                    admin_level='8')"
    ]
   },
   {

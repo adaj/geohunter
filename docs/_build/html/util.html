@@ -1,0 +1,319 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Geohunter.util &mdash; Geohunter  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="setup.html" />
+    <link rel="prev" title="Geohunter.osm" href="osm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Geohunter
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Package modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="osm.html">Geohunter.osm</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Geohunter.util</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Geohunter</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">Package modules</a> &raquo;</li>
+        
+      <li>Geohunter.util</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/util.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-geohunter.util">
+<span id="geohunter-util"></span><h1>Geohunter.util<a class="headerlink" href="#module-geohunter.util" title="Permalink to this headline">¶</a></h1>
+<p>geohunter.util</p>
+<p>This module implements further operations for analyzing OpenStreetMap data.</p>
+<dl class="py function">
+<dt id="geohunter.util.contour_geojson">
+<code class="sig-prename descclassname">geohunter.util.</code><code class="sig-name descname">contour_geojson</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">lonv</span></em>, <em class="sig-param"><span class="n">latv</span></em>, <em class="sig-param"><span class="n">cmin</span></em>, <em class="sig-param"><span class="n">cmax</span></em><span class="sig-paren">)</span><a class="headerlink" href="#geohunter.util.contour_geojson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supports plotting the result of <cite>kde_interpolation</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="geohunter.util.kde_interpolation">
+<code class="sig-prename descclassname">geohunter.util.</code><code class="sig-name descname">kde_interpolation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">poi</span></em>, <em class="sig-param"><span class="n">bw</span><span class="o">=</span><span class="default_value">'scott'</span></em>, <em class="sig-param"><span class="n">grid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_contour_geojson</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#geohunter.util.kde_interpolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies kernel density estimation to a set points-of-interest
+measuring the density estimation on a grid of places (arbitrary points
+regularly spaced).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>poi</strong> (<em>GeoDataFrame.</em>) – Corresponds to input data.</p></li>
+<li><p><strong>bw</strong> (<em>'scott'</em><em>, </em><em>'silverman'</em><em> or </em><em>float.</em>) – The bandwidth for kernel density estimation. Check <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html">scipy docs</a> about their bw parameter of gaussian_kde.</p></li>
+<li><p><strong>grid</strong> (<em>GeoDataFrame</em><em> or </em><em>None</em><em>, </em><em>default is None.</em>) – If a grid is not given, then it is provided according to the area parameter
+and resolution.</p></li>
+<li><p><strong>resolution</strong> (<em>float</em><em>, </em><em>default is 1.</em>) – Space in kilometers between the arbitrary points of resulting grid.</p></li>
+<li><p><strong>area</strong> (<em>GeoDataFrame</em><em> or </em><em>None</em><em>, </em><em>default is None.</em>) – If area is given, grid will be bounded accordingly with the GeoDataFrame passed.</p></li>
+<li><p><strong>return_contour_geojson</strong> (<em>bool</em><em>, </em><em>default is False.</em>) – If True, it returns the result of the kde as a contourplot in the geojson format.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>GeoDataFrame with a grid of points regularly spaced with the respective</em></p></li>
+<li><p><em>density values for the input points-of-interest given.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">geohunter</span> <span class="k">as</span> <span class="nn">gh</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poi</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">osm</span><span class="o">.</span><span class="n">Eagle</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bbox</span><span class="o">=</span><span class="s1">&#39;(-5.91,-35.29,-5.70,-35.15)&#39;</span><span class="p">,</span>
+<span class="go">            amenity=[&#39;hospital&#39; , &#39;police&#39;], natural=&#39;*&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neighborhood</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">osm</span><span class="o">.</span><span class="n">Eagle</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bbox</span><span class="o">=</span><span class="s1">&#39;(-5.91,-35.29,-5.70,-35.15)&#39;</span><span class="p">,</span>
+<span class="go">            largest_geom=True,</span>
+<span class="go">            name=&#39;Ponta Negra&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">kde_interpolation</span><span class="p">(</span><span class="n">poi</span><span class="p">,</span> <span class="n">bw</span><span class="o">=</span><span class="s1">&#39;scott&#39;</span><span class="p">,</span> <span class="n">area</span><span class="o">=</span><span class="n">neighborhood</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span> <span class="o">=</span> <span class="n">area</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s1">&#39;density&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="geohunter.util.make_gridpoints">
+<code class="sig-prename descclassname">geohunter.util.</code><code class="sig-name descname">make_gridpoints</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bbox</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">return_coords</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#geohunter.util.make_gridpoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>It constructs a grid of points regularly spaced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bbox</strong> (<em>str</em><em>, </em><em>GeoDataFrame</em><em> or </em><em>dict.</em>) – Corresponds to the boundary box in which the grid will be formed.
+If a str is provided, it should be in ‘(S,W,N,E)’ format. With a
+GeoDataFrame, we will use the coordinates of the extremities. Also
+one can provide a dict with ‘south’, ‘north’, ‘east’, ‘west’.</p></li>
+<li><p><strong>resolution</strong> (<em>float</em><em>, </em><em>default is 1.</em>) – Space between the arbitrary points of resulting grid.</p></li>
+<li><p><strong>return_coords</strong> (<em>bool</em>) – If it is wanted to return the coordinate sequences.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="geohunter.util.parse_bbox">
+<code class="sig-prename descclassname">geohunter.util.</code><code class="sig-name descname">parse_bbox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bbox</span></em><span class="sig-paren">)</span><a class="headerlink" href="#geohunter.util.parse_bbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Organizes bbox to the standard format used in other places in the package
+and also in Overpass API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bbox</strong> (<em>str</em><em>, </em><em>GeoDataFrame</em><em> or </em><em>dict.</em>) – Corresponds to the boundary box wanted to be formatted.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str containing ‘(S,W,N,E)’ coordinates of the bounding box.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="setup.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="osm.html" class="btn btn-neutral float-left" title="Geohunter.osm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Adelson Araujo
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

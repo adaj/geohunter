@@ -1,9 +1,7 @@
 """
 geohunter.util
 
-This module implements several operations for analyzing OpenStreetMap data.
-
-Contributors : Adelson Araujo jr
+This module implements further operations for analyzing OpenStreetMap data.
 """
 
 import math
@@ -20,7 +18,7 @@ import geojsoncontour
 pd.options.mode.chained_assignment = None
 
 
-def kde_interpolation(poi, bw='scott', area=None, resolution=1, grid=None, return_contour_geojson=False):
+def kde_interpolation(poi, bw='scott', grid=None, resolution=1, area=None, return_contour_geojson=False):
     """
     Applies kernel density estimation to a set points-of-interest
     measuring the density estimation on a grid of places (arbitrary points
@@ -29,23 +27,45 @@ def kde_interpolation(poi, bw='scott', area=None, resolution=1, grid=None, retur
     Parameters
     ----------
     poi : GeoDataFrame.
-    Corresponds to input data.
+        Corresponds to input data.
 
-    area : GeoDataFrame or None, default is None.
-    It's the geographic boundaries in which the result will be delimited.
-
-    resolution : float, default is 1.
-    Space between the arbitrary points of resulting grid.
+    bw : 'scott', 'silverman' or float.
+        The bandwidth for kernel density estimation. Check `scipy docs`_ about their bw parameter of gaussian_kde.
 
     grid : GeoDataFrame or None, default is None.
-    If a grid is not given, then it is provided according to the area parameter
-    and resolution.
+        If a grid is not given, then it is provided according to the area parameter
+        and resolution.
+
+    resolution : float, default is 1.
+        Space in kilometers between the arbitrary points of resulting grid.
+
+    area : GeoDataFrame or None, default is None.
+        If area is given, grid will be bounded accordingly with the GeoDataFrame passed.
+
+    return_contour_geojson : bool, default is False.
+        If True, it returns the result of the kde as a contourplot in the geojson format.
 
     Returns
     -------
     GeoDataFrame with a grid of points regularly spaced with the respective
     density values for the input points-of-interest given.
+
+    Example
+    -------
+    >>> import geohunter as gh
+    >>> poi = gh.osm.Eagle().get(bbox='(-5.91,-35.29,-5.70,-35.15)',
+                amenity=['hospital' , 'police'], natural='*')
+    >>> neighborhood = gh.osm.Eagle().get(bbox='(-5.91,-35.29,-5.70,-35.15)',
+                largest_geom=True,
+                name='Ponta Negra')
+    >>> result = kde_interpolation(poi, bw='scott', area=neighborhood, resolution=0.5)
+    >>> ax = area.plot(edgecolor='black', color='white')
+    >>> result.plot(column='density', ax=ax)
+
+    .. _scipy docs:
+       https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
     """
+    lonv, latv = None, None
     if grid is None and area is None:
         raise ValueError('grid or area must be given.')
     if grid is None and isinstance(area, gpd.GeoDataFrame):
@@ -56,6 +76,8 @@ def kde_interpolation(poi, bw='scott', area=None, resolution=1, grid=None, retur
     grid_ = grid[:]
     grid_['density'] = kernel(grid[['lon', 'lat']].values.T)
     if return_contour_geojson:
+        assert lonv is not None and latv is not None, \
+            "grid should not be passed for this operation. Try to pass area and pick a resolution level."
         return contour_geojson(grid_['density'], lonv, latv,
                                cmin=grid_['density'].min(),
                                cmax=grid_['density'].max())
@@ -64,6 +86,9 @@ def kde_interpolation(poi, bw='scott', area=None, resolution=1, grid=None, retur
 
 
 def contour_geojson(y, lonv, latv, cmin, cmax):
+    """
+    Supports plotting the result of `kde_interpolation`.
+    """
     Z = zeros(lonv.shape[0]*lonv.shape[1]) - 999
     Z[y.index] = y.values
     Z = Z.reshape(lonv.shape)
@@ -83,16 +108,16 @@ def make_gridpoints(bbox, resolution=1, return_coords=False):
     Parameters
     ----------
     bbox : str, GeoDataFrame or dict.
-    Corresponds to the boundary box in which the grid will be formed.
-    If a str is provided, it should be in '(S,W,N,E)' format. With a
-    GeoDataFrame, we will use the coordinates of the extremities. Also
-    one can provide a dict with 'south', 'north', 'east', 'west'.
+        Corresponds to the boundary box in which the grid will be formed.
+        If a str is provided, it should be in '(S,W,N,E)' format. With a
+        GeoDataFrame, we will use the coordinates of the extremities. Also
+        one can provide a dict with 'south', 'north', 'east', 'west'.
 
     resolution : float, default is 1.
-    Space between the arbitrary points of resulting grid.
+        Space between the arbitrary points of resulting grid.
 
     return_coords : bool
-    If it is wanted to return the coordinate sequences.
+        If it is wanted to return the coordinate sequences.
     """
     bbox_ = parse_bbox(bbox)
     b_s, b_w, b_n, b_e = map(float, bbox_[1:-1].split(','))
@@ -120,7 +145,7 @@ def parse_bbox(bbox):
     Parameters
     ----------
     bbox : str, GeoDataFrame or dict.
-    Corresponds to the boundary box wanted to be formatted.
+        Corresponds to the boundary box wanted to be formatted.
 
     Returns
     -------

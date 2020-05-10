@@ -1,18 +1,12 @@
-"""
-geohunter.osm
+"""geohunter.osm
 
-This module implements Overpass requests with a simpler interface. The
-OpenStreetMap has a data model based on nodes, ways and relations. The
-geometric data structures available in geopandas are points, lines and polygons
-(but also multipoints, multilines and multipolygons), which are shapely
-objects under the hood. The latter set of data structures may be more easy to
-work for some people, for example to do spatial joins. In this module,
-we parse Overpass results to geopandas GeoDataFrame.
+This module wraps requests to OpenStreetMap's Overpass API with an interface for
+the GeoPandas data structures. The OpenStreetMap has a data model based on nodes,
+ways and relations. The geometric data structures available in geopandas are points,
+lines and polygons (but also multipoints, multilines and multipolygons).
 
 For a complete list of data categories available ("map features"), please
 look the OpenStreetMap.
-
-Contributors: Adelson Araujo jr
 """
 
 from time import time
@@ -49,8 +43,8 @@ def timelog(func):
 
 class Eagle:
     """
-    `Eagle` is a facade for requesting data according to the OpenStreetMap
-    data model with the `request_overpass()` method, but this class also
+    `Eagle` is the facade for requesting data given the map
+    keys available with the `request_overpass()` method. This class also
     implements a `get()` method which return the data required in a single
     pandas DataFrame that has a geometric attribute that makes it a geopandas
     GeoDataFrame (please consult geopandas documentation for more details).
@@ -66,32 +60,32 @@ class Eagle:
     def get(self, bbox, as_points=False,
             largest_geom=False, sjoin_op='intersects',
             **map_features):
-        """
-        Returns points-of-interest data from OpenStreetMap.
-
-        It returns the geopandas.GeoDataFrame with a set of points-of-interest
-        requested in **map_features. For a list of complete map features keys
+        """Returns points-of-interest data from OpenStreetMap.
+        as geopandas.GeoDataFrame with a set of points-of-interest
+        requested. For a list of complete map features keys
         and elements available on the API, please consult documentation
         https://wiki.openstreetmap.org/wiki/Map_Features.
-
-        Example : df = Eagle().get(bbox='(-5.91,-35.29,-5.70,-35.15)',
-                    amenity=['hospital' , 'police'], natural='*')
 
         Parameters
         ----------
         bbox : str or geopandas.GeoDataFrame
-        If str, follow the structure (south_lat,west_lon,north_lat,east_lon),
-        but if you prefer to pass a geopandas.GeoDataFrame, the bbox will be
-        defined as the maximum and minimum values delimited by the geometry.
+            If str, follow the structure (south_lat,west_lon,north_lat,east_lon),
+            but if you prefer to pass a geopandas.GeoDataFrame, the bbox will be
+            defined as the maximum and minimum values delimited by the geometry.
 
-        **map_features : poi requested described in map features
-        Example: amenity=['hospital', 'police']. See OpenStreetMap docs for
-        the map features available.
+        **map_features : **kwargs
+            requested described in map features.
+            Example: amenity=['hospital', 'police'].
 
         Returns
         -------
         geopandas.GeoDataFrame
             GeoDataFrame with all points-of-interest requested.
+
+        Example
+        -------
+        >>> df = Eagle().get(bbox='(-5.91,-35.29,-5.70,-35.15)',
+                    amenity=['hospital' , 'police'], natural='*')
         """
         for map_feature in map_features:
             if map_feature not in MAP_FEATURES_KEYS:
@@ -146,11 +140,12 @@ class Eagle:
         Parameters
         ----------
         bbox : str or geopandas.GeoDataFrame
-        If str, follow the structure (south_lat,west_lon,north_lat,east_lon),
-        but if you prefer to pass a geopandas.GeoDataFrame, the bbox will be
-        defined as the maximum and minimum values delimited by the geometry.
+            If str, follow the structure (south_lat,west_lon,north_lat,east_lon),
+            but if you prefer to pass a geopandas.GeoDataFrame, the bbox will be
+            defined as the maximum and minimum values delimited by the geometry.
 
         map_feature_key: str
+            Map key item from OpenStreetMap, such as "amenity", "highway" etc.
 
         map_feature_item: str
 
@@ -185,14 +180,8 @@ class Eagle:
         self.close()
 
 
-
-
-
 def requests_retry_session(retries=3, backoff_factor=0.5, session=None,
                            status_forcelist=(500, 503, 502, 504)):
-    """
-    Retrieved from https://www.peterbe.com/plog/best-practice-with-retries-with-requests.
-    """
     session = session or Session()
     retry = Retry(total=retries, read=retries, connect=retries,
                   backoff_factor=backoff_factor, status_forcelist=status_forcelist)
