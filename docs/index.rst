@@ -26,9 +26,6 @@ If you find any opportunity to do so, feel free to open an issue, fork the repos
    setup
    example
 
-.. Examples::
-
-   geohunter
 
 
 Indices and tables
