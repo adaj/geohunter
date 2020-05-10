@@ -19,8 +19,7 @@ pd.options.mode.chained_assignment = None
 
 
 def kde_interpolation(poi, bw='scott', grid=None, resolution=1, area=None, return_contour_geojson=False):
-    """
-    Applies kernel density estimation to a set points-of-interest
+    """Applies kernel density estimation to a set points-of-interest
     measuring the density estimation on a grid of places (arbitrary points
     regularly spaced).
 
@@ -86,8 +85,7 @@ def kde_interpolation(poi, bw='scott', grid=None, resolution=1, area=None, retur
 
 
 def contour_geojson(y, lonv, latv, cmin, cmax):
-    """
-    Supports plotting the result of `kde_interpolation`.
+    """Supports plotting the result of `kde_interpolation`.
     """
     Z = zeros(lonv.shape[0]*lonv.shape[1]) - 999
     Z[y.index] = y.values
@@ -102,8 +100,7 @@ def contour_geojson(y, lonv, latv, cmin, cmax):
 
 
 def make_gridpoints(bbox, resolution=1, return_coords=False):
-    """
-    It constructs a grid of points regularly spaced.
+    """It constructs a grid of points regularly spaced.
 
     Parameters
     ----------
@@ -138,8 +135,7 @@ def make_gridpoints(bbox, resolution=1, return_coords=False):
 
 
 def parse_bbox(bbox):
-    """
-    Organizes bbox to the standard format used in other places in the package
+    """Organizes bbox to the standard format used in other places in the package
     and also in Overpass API.
 
     Parameters
