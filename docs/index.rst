@@ -8,6 +8,8 @@ Geohunter
 
 Geohunter is a python package for parsing and analyzing data from the Overpass API in a pandas-like programming framework. There are similar packages to ours, but our purpose is to create a bridge between data from the OpenStreetMap platform to the geopandas data structures, which offer lots of useful tools for geospatial data analysis.
 
+.. image:: https://raw.githubusercontent.com/adaj/adaj.github.io/master/images/geohunter.png
+
 This package was originally created with the purpose of providing volunteered geographic information to machine learning pipelines. Data from points-of-interest of the city may represent an important source for feature extraction. There are cases where the density of geographic information may help predict a particular variable. For example, consider a set of various points-of-interest.
 
 .. image:: https://raw.githubusercontent.com/adaj/adaj.github.io/master/images/poi_data.png
