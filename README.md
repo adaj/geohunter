@@ -1,5 +1,7 @@
 # Geohunter
 
+[![Documentation Status](https://readthedocs.org/projects/geohunter/badge/?version=latest)](https://geohunter.readthedocs.io/en/latest/?badge=latest)
+
 Geohunter is a python package for parsing and analyzing data from the Overpass API in a pandas-like programming framework. There are similar packages to ours, but our purpose is to create a bridge between data from the OpenStreetMap platform to the geopandas data structures, which offer lots of useful tools for geospatial data analysis.
 
 ![Geohunter](https://github.com/adaj/adaj.github.io/blob/master/images/geohunter.png?raw=true)
