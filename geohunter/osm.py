@@ -111,6 +111,7 @@ class Eagle:
                     #  intersection could get undesired neighbor regions
                     sjoin_op = 'within'
             for mf_item in map_features[mf_key]:
+                print(f'Requesting {mf_key}={mf_item}')
                 result = self.request_overpass(bbox,
                                               map_feature_key=mf_key,
                                               map_feature_item=mf_item)
@@ -172,6 +173,18 @@ class Eagle:
             raise Exception('Request made with no data returned , ' \
                 + 'please check try with other parameters.')
         return result
+
+    def debug__find_geom_not_being_successfully_parsed(self, bbox, key, item):
+        failed = self.request_overpass(bbox,
+                      map_feature_key=key,
+                      map_feature_item=item)
+        elements_df = DataFrame(failed['elements'])
+        for i in elements_df.iterrows():
+            try:
+                parse_geometry(i[1])
+            except:
+                print(f'{key}={item} id#{i[0]}')
+                return i[1]
 
     def close(self):
         self.session.close()
@@ -269,7 +282,7 @@ def parse_relation(x_members):
             # shapely saved us with shapely.ops.polygonize.
             polygon = list(polygonize(lines))
             if len(polygon) > 1:
-                final_geom = MultiPolygon([[s, []] for s in polygon])
+                final_geom = MultiPolygon([s for s in polygon])
             else:
                 final_geom = polygon[0]
     elif points:

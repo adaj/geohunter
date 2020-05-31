@@ -13,6 +13,7 @@ from shapely.geometry import Point, Polygon
 from scipy import stats
 import matplotlib.pyplot as plt
 import geojsoncontour
+import pysal
 
 
 pd.options.mode.chained_assignment = None
@@ -134,6 +135,41 @@ def make_gridpoints(bbox, resolution=1, return_coords=False):
     return gridpoints
 
 
+def make_gridsquares(city_shape, resolution=1):
+    """It constructs a grid of square cells.
+
+    Parameters
+    ----------
+    city_shape : GeoDataFrame.
+        Corresponds to the boundary geometry in which the grid will be formed.
+
+    resolution : float, default is 1.
+        Space between the square cells.
+    """
+    x0 = city_shape.bounds.min().values[0]
+    xf = city_shape.bounds.max().values[2]
+    y0 = city_shape.bounds.min().values[1]
+    yf = city_shape.bounds.max().values[3]
+    n_y = int((yf-y0)/(resolution/110.57))
+    n_x = int((xf-x0)/(resolution/111.32))
+    grid = {}
+    c = 0
+    for i in range(n_x):
+        for j in range(n_y):
+            grid[c] = {'geometry':Polygon([[x0,y0],
+                            [x0+(resolution/111.32),y0],
+                            [x0+(resolution/111.32),y0+(resolution/110.57)],
+                            [x0,y0+(resolution/110.57)]])}
+            c += 1
+            y0 += resolution/110.57
+        y0 = city_shape.bounds.min().values[1]
+        x0 += resolution/111.32
+    grid = pd.DataFrame(grid).transpose()
+    grid = gpd.GeoDataFrame(grid, geometry='geometry', crs={'init':'epsg:4326'})
+    grid = gpd.sjoin(grid, city_shape, op='intersects')
+    return grid[~grid.index.duplicated()]
+
+
 def parse_bbox(bbox):
     """Organizes bbox to the standard format used in other places in the package
     and also in Overpass API.
@@ -163,3 +199,28 @@ def parse_bbox(bbox):
             "Invalid bbox. Please include 'south','north','west' and 'east' keys"
         bbox = f"({bbox['south']},{bbox['west']},{bbox['north']},{bbox['east']})"
     return bbox
+
+
+def q_ongrid(data, grid, strata_col):
+#   usage: q_ongrid(grid.data['value'], grid.data, 'BAIRRO')
+    qi = 0
+    for strata in grid[strata_col].unique():
+        x = grid.loc[grid[strata_col]==strata]
+        if x.shape[0]==0:
+            qi += 0
+        else:
+            qi += x.shape[0]*np.var(data.loc[x.index])
+    return 1 - (qi/(data.shape[0]*np.var(data)))
+
+
+def moran_i_ongrid(data, coords, d_threshold):
+#    usage: moran_i_ongrid(data=grid.data['value'],
+#                coords=grid.data['geometry'].centroid.apply(lambda x:x.coords[0])
+#                d_threshold=1/110)
+    from esda import Moran
+    w=pysal.lib.weights.distance.DistanceBand(list(coords.values),
+                                              threshold=d_threshold,binary=True)
+    mi = Moran(list(data.values),  w)
+    mi.p_norm
+    mi.I
+    return mi.I, mi.p_norm
