@@ -10,11 +10,11 @@ Geohunter is a python package for parsing and analyzing data from the Overpass A
 
 This package was originally created with the purpose of providing volunteered geographic information to machine learning pipelines. Data from points-of-interest of the city may represent an important source for feature extraction. There are cases where the density of geographic information may help predict a particular variable. For example, consider a set of various points-of-interest.
 
-.. image:: https://raw.githubusercontent.com/adaj/adaj.github.io/master/images/poi_data.png
+.. image:: https://raw.githubusercontent.com/adaj/geohunter/master/examples/images/poi.png
 
-In our package, we provide some geographic feature extraction procedures with the function `util.kde_interpolation` (see result in figure below), based on the Scipy implementation of KDE. This geographic feature extraction aspect of our framework is continuously being incremented to get even powerful variables.
+In our package, we provide some geographic feature extraction procedures with the function `util.kde_interpolation` (see result in figure below), based on the Scipy implementation of KDE. See the plot below with an example for schools density.
 
-.. image:: https://raw.githubusercontent.com/adaj/adaj.github.io/master/images/poi_kde.png
+.. image:: https://raw.githubusercontent.com/adaj/geohunter/master/examples/images/kde_schools.png
 
 If you find any opportunity to do so, feel free to open an issue, fork the repository and contribute to this project.
 
