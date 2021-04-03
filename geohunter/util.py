@@ -13,7 +13,6 @@ from shapely.geometry import Point, Polygon
 from scipy import stats
 import matplotlib.pyplot as plt
 import geojsoncontour
-import pysal
 
 
 pd.options.mode.chained_assignment = None
@@ -217,6 +216,7 @@ def moran_i_ongrid(data, coords, d_threshold):
 #    usage: moran_i_ongrid(data=grid.data['value'],
 #                coords=grid.data['geometry'].centroid.apply(lambda x:x.coords[0])
 #                d_threshold=1/110)
+    import pysal
     from esda import Moran
     w=pysal.lib.weights.distance.DistanceBand(list(coords.values),
                                               threshold=d_threshold,binary=True)

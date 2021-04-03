@@ -11,7 +11,7 @@ setup(
     packages=['geohunter'],
     python_requires='>=3.7',
     install_requires=['pandas', 'matplotlib',  'scipy',
-        'geopandas==0.7.0', 'descartes', 'requests',
+        'statsmodels==0.12.1', 'geopandas', 'descartes', 'requests',
         'geojsoncontour'],
     classifiers=[
         'Intended Audience :: Science/Research',

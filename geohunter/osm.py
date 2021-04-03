@@ -9,7 +9,7 @@ For a complete list of data categories available ("map features"), please
 look the OpenStreetMap.
 """
 
-from time import time
+from time import time, sleep
 from pandas import DataFrame, json_normalize
 from geopandas import GeoDataFrame, sjoin
 from shapely.ops import polygonize, linemerge
@@ -115,12 +115,15 @@ class Eagle:
                 result = self.request_overpass(bbox,
                                               map_feature_key=mf_key,
                                               map_feature_item=mf_item)
+                print('Done. Wait for 15s to start the next request.')
+                sleep(15)
                 result_gdf = overpass_result_to_geodf(result, as_points)
                 result_gdf['key'] = mf_key
                 poi_data = poi_data.append(result_gdf)
         poi_data['item'] = poi_data.apply(lambda x: x['tags'][x['key']], axis=1)
         poi_data = poi_data.reset_index(drop=True)
         poi_data['name'] = json_normalize(poi_data['tags'])['name']
+        poi_data = GeoDataFrame(poi_data)
         if isinstance(bbox, GeoDataFrame):
             poi_ix = sjoin(poi_data, bbox, op=sjoin_op).index.unique()
             poi_data = poi_data.loc[poi_ix]
@@ -166,7 +169,9 @@ class Eagle:
         result = self.session.get(
             f'http://overpass-api.de/api/interpreter?data={query_string}')
         if result.status_code != 200:
-            raise Exception("Bad request.")
+            if result.status_code == 429:
+                raise Exception('Too many requests. Please wait a couple minutes to retry.')
+            raise Exception(f"HTTP {result.status_code}, error.")
         result = result.json()
         if len(result['elements']) == 0:
             print(query_string)
@@ -290,4 +295,8 @@ def parse_relation(x_members):
             final_geom = MultiPoint(points)
         else:
             final_geom = Point(points[0])
+    else:
+        print(x_members)
+        print('Relation not correctly parsed. Report this in error in the repository.')
+        return Point([0,0])
     return final_geom
