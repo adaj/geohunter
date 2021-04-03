@@ -31,5 +31,24 @@ We are welcome to your contribution, submit your pull request!
 
 ## Authors
 
-Adelson Araújo (adelson.dias@gmail.com)
-João Marcos do Valle (jmarcos.araujo96@gmail.com)
+* Adelson Araújo 
+* João Marcos do Valle 
+
+## Citing geohunter
+
+If you use this package in a scientific publication, we would appreciate if you cite the following paper:
+
+Geographic Feature Engineering with Points-of-Interest from OpenStreetMap. Araujo et al., KDIR 2020, p. 116-123.
+
+```
+@conference{araujo2020geographic,
+  author={Araujo, A. and Valle, J. M. and Cacho, N.},
+  title={Geographic Feature Engineering with Points-of-Interest from OpenStreetMap},
+  booktitle={Proceedings of the 12th International Joint Conference on Knowledge Discovery, Knowledge Engineering and Knowledge Management - Volume 1: KDIR},
+  year={2020},
+  pages={116-123},
+  publisher={SciTePress},
+  organization={INSTICC},
+  doi={10.5220/0010155101160123}
+}
+```
